@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Total Expenditure
+{% endblock %}
+
+{% block main %}
+    {% if options is none %}
+        <h2 class="text-center fw-bold mb-2">Kindly add a Expenditure above before seeing an overview.</h2>
+
+    {% else %}
+        <h2 class="text-center fw-bold mb-2">Total Expenditure Breakdown</h2>
+        <form action="/" method="post">
+            <select name="selected_month">
+                {% for option in options %}
+                    <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+        <h3 class="text-center fw-bold mb-2">Total amount spent in {{ chosen_option }}: ${{ expenses }}</h3>
+        <h3 class="text-center fw-bold mb-2">Total amount earn in {{ chosen_option }}: ${{ earnings }}</h3>
+        <hr>
+        <h3 class="text-center fw-bold mb-2">Expenditure incurred during {{ chosen_option }}:</h3>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="text-start">S/N</th>
+                    <th class="text-start">Expense Type</th>
+                    <th class="text-start">Date</th>
+                    <th class="text-start">Payment Method</th>
+                    <th class="text-start">Category</th>
+                    <th class="text-start">Amount</th>
+                    <th class="text-start">Note</th>
+                </tr>
+
+            </thead>
+            {% for transaction in transactions %}
+                <tbody>
+                    <td class="text-start">{{ transaction.id }}</td>
+                    <td class="text-start">{{ transaction.Expense }}</td>
+                    <td class="text-start">{{ transaction.Date }}</td>
+                    <td class="text-start">{{ transaction.Payment }}</td>
+                    <td class="text-start">{{ transaction.Category }}</td>
+                    <td class="text-start">{{ transaction.Amount }}</td>
+                    <td class="text-start">{{ transaction.Note }}</td>
+                </tbody>
+            {% endfor %}
+
+        </table>
+    {% endif %}
+{% endblock %}
