@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    View Meetings/Tasks
+{% endblock %}
+
+{% block main %}
+
+    <h2 class="text-center fw-bold mb-2">Select Date:</h2>
+    <form action="/view" method="post">
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="date" placeholder="Date" type="Date">
+        </div>
+        <div class="mb-3">
+            <input type="radio" name="mt" value="meet">
+            <label for="meet">Schedule Meeting</label>
+            <input type="radio" name="mt" value="task">
+            <label for="task">Send Task</label>
+        </div>
+        <button class="btn btn-primary" type="submit">Select</button>
+    </form>
+
+{% endblock %}
