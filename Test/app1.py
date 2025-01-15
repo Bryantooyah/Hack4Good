@@ -7,6 +7,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, extract_month_year, extract_dates
+from summary import email_summary
 
 # Configure application
 app = Flask(__name__)
@@ -502,7 +503,14 @@ def change():
 
 @app.route("/summary", methods=["GET", "POST"])
 @login_required
-def add():
+def summary():
+    if request.method == "POST":
+        email = request.form.get("email")
+        response = email_summary(email)
+        return response
+
+
+
     if request.method == "POST":
         if not request.form.get("flow"):
             return apology("Missing Expenditure Flow", 400)
