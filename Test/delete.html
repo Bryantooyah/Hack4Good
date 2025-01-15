@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Delete Expenditure
+{% endblock %}
+
+{% block main %}
+    <h2 class="text-center fw-bold mb-2">Please search the Expenditure that you would like to delete:</h2>
+    <form action="/delete" method="post">
+        <div class="mb-3">
+            <input type="radio" name="flow" value="income">
+            <label for="income">Income</label>
+            <input type="radio" name="flow" value="expense">
+            <label for="expense">Expense</label>
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="date" placeholder="Date" type="Date">
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="method" placeholder="Payment Method" type="text">
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="category" placeholder="Category" type="text">
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" class="form-control mx-auto w-auto" min="0" name="amount" placeholder="Amount" type="text">
+        </div>
+        <div class="mb-3">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="note" placeholder="Note" type="text">
+        </div>
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+
+    <hr>
+    {% if transactions is none %}
+
+    {% elif transactions == [] %}
+        <h2 class="text-center fw-bold mb-2">No transaction found, Please Search again</h2>
+    {% else %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="text-start">S/N</th>
+                    <th class="text-start">Expense Type</th>
+                    <th class="text-start">Date</th>
+                    <th class="text-start">Payment Method</th>
+                    <th class="text-start">Category</th>
+                    <th class="text-start">Amount</th>
+                    <th class="text-start">Note</th>
+                    <th class="text-end">Ammended On</th>
+                    <th class="text-end">Please choose which to edit</th>
+                </tr>
+        
+            </thead>
+            {% for transaction in transactions %}
+                <tbody>
+                    <td class="text-start">{{ transaction.id }}</td>
+                    <td class="text-start">{{ transaction.Expense }}</td>
+                    <td class="text-start">{{ transaction.Date }}</td>
+                    <td class="text-start">{{ transaction.Payment }}</td>
+                    <td class="text-start">{{ transaction.Category }}</td>
+                    <td class="text-start">{{ transaction.Amount }}</td>
+                    <td class="text-start">{{ transaction.Note }}</td>
+                    <td class="text-end">{{ transaction.Ammended }}</td>
+                    <td class="text-end"><a class="button" href="/deleted/{{ transaction.Hidden_id }}" id="{{ transaction.id }}">Delete</a></td>
+                </tbody>
+            {% endfor %}
+        
+        </table>
+    {% endif %}
+{% endblock %}
