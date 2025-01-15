@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Add Meetings/Tasks
+{% endblock %}
+
+{% block main %}
+    {% if action == "meet" %}
+        <h2 class="text-center fw-bold mb-2">Select Time for Meeting:</h2>
+        <form action="/edit" method="post">
+            <input type="time" id="appt" name="appt" min="08:00" max="18:00" required />
+            <small>Office hours are 8am to 6pm</small>
+        </form>
+    {% else %}
+        <h2 class="text-center fw-bold mb-2">Task:</h2>
+        <form action="/edit" method="post">
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="task" placeholder="Add Task" type="text">
+        </form>
+    {% endif %}
+{% endblock %}

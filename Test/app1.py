@@ -104,16 +104,46 @@ def index():
     expenses = f"{expenses:.2f}"
     earnings = f"{earnings:.2f}"
     return render_template("index.html", transactions=transactions, options=options, chosen_option=chosen_option, earnings=earnings, expenses=expenses)
-    
-@app.route("/view", methods=["GET", "POST"])
+
+
+@app.route("/add", methods=["GET", "POST"])
 @login_required
 def add():
     if request.method == "POST":
+        if not request.form.get("flow"):
+            return apology("Missing Expenditure Flow", 400)
+        elif not request.form.get("date"):
+            return apology("Missing Date", 400)
+        elif not request.form.get("amount"):
+            return apology("Missing Amount", 400)
+        elif not request.form.get("method"):
+            return apology("Missing Payment Method", 400)
+        
+        amount = request.form.get("amount")
+
+        if(isint(amount) == False and isfloat(amount) == False):
+            return apology("Invalid Amount", 400)
+        
+        if(isint(amount) == True):
+            amount = int(amount)
+        else:
+            amount = float(amount)
+
+        flow = request.form.get("flow")
         date = request.form.get("date")
-        action = request.form.get("mt")
-        return render_template("edit.html", date=date, action=action)
+        payment = request.form.get("method")
+        category = request.form.get("category")
+        note = request.form.get("note")
+        if flow == "expense":
+            amount = -amount
+        else:
+            amount = amount
+        amount = round(amount, 2)
+        db.execute("INSERT INTO transactions (person_id, flow, dated, payment, category, amount, note) VALUES (?, ?, ?, ?, ?, ?, ?)", session["user_id"], flow, date, payment, category, amount, note)
+        flash("Expenditure Added!", "success")
+        return redirect("/")
     else:
-        return render_template("view.html")
+        return render_template("add.html")
     
 @app.route("/edit", methods=["GET", "POST"])
 @login_required
@@ -139,7 +169,7 @@ def edit():
         user_info = [meets, tasks]
         user_category = ["Meetings", "Tasks"]
         user_search = dict(zip(user_category, user_info))
-        if user_info == ['', '']:
+        if user_info == [None, '', '', '', '', '']:
             return render_template("edit.html", dates=dates)
         else:
             user_search_transaction = []
@@ -160,7 +190,7 @@ def edit():
                             break
                 if placeholder != []:
                     user_search_transaction.append(placeholder[0])
-            return render_template("view.html", dates=user_search_transaction)
+            return render_template("edit.html", dates=user_search_transaction)
     else:
         return render_template("edit.html", dates=None)
     
@@ -222,6 +252,124 @@ def edit_transaction(transaction_id):
                 break
         
         return render_template("edited.html", transaction=unedited_transaction)
+
+@app.route("/delete", methods=["GET", "POST"])
+@login_required
+def delete():
+    user_id = session["user_id"]
+    if request.method == "POST":
+        user_transaction = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
+        transactions = []
+        counter = 0
+        for transaction in user_transaction:
+            counter += 1
+            amount = transaction["amount"]
+            amount = f"{amount:.2f}"
+            transactions.append(
+                {
+                    "id": counter,
+                    "Expense": transaction["flow"],
+                    "Date": transaction["dated"],
+                    "Payment": transaction["payment"],
+                    "Category": transaction["category"],
+                    "Amount": amount,
+                    "Note": transaction["note"],
+                    "Ammended": transaction["timestamp"],
+                    "Hidden_id": transaction["id"],
+                }
+            )
+
+        amount = request.form.get("amount")
+        flow = request.form.get("flow")
+        date = request.form.get("date")
+        payment = request.form.get("method")
+        category = request.form.get("category")
+        note = request.form.get("note")
+        user_info = [flow,date,payment,category,amount,note]
+        user_category = ["Expense","Date","Payment","Category","Amount", "Note"]
+        user_search = dict(zip(user_category, user_info))
+        if user_info == [None, '', '', '', '', '']:
+            return render_template("delete.html", transactions=transactions)
+        else:
+            user_search_transaction = []
+            for transaction in transactions:
+                placeholder = []
+                print(transaction)
+                for categories, info in user_search.items():
+                    print(categories, info)
+                    if info == '' or info == None:
+                        continue
+                    else:
+                        print(transaction[categories], info)
+                        if transaction[categories] == info:
+                            print("yes")
+                            placeholder.append(transaction)
+                        else:
+                            placeholder = []
+                            break
+                if placeholder != []:
+                    user_search_transaction.append(placeholder[0])
+            return render_template("delete.html", transactions=user_search_transaction)
+    else:
+        return render_template("delete.html", transactions=None)
+    
+@app.route('/deleted/<int:transaction_id>', methods=['GET', 'POST'])
+@login_required
+def delete_transaction(transaction_id):
+    user_id = session["user_id"]
+    user_transaction = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
+    for transaction in user_transaction:
+        if transaction["id"] == transaction_id:
+            if transaction["flow"] == "expense":
+                transaction["amount"] = -transaction["amount"]
+            unedited_transaction = {
+                    "id": 1,
+                    "Expense": transaction["flow"],
+                    "Date": transaction["dated"],
+                    "Payment": transaction["payment"],
+                    "Category": transaction["category"],
+                    "Amount": transaction["amount"],
+                    "Note": transaction["note"],
+                    "Ammended": transaction["timestamp"],
+                    "Hidden_id": transaction["id"],
+            }
+            break
+            
+
+    if request.method == "POST":
+        db.execute("DELETE FROM transactions WHERE id = ?", transaction_id)
+        flash("Expenditure Deleted!", "success")
+        return redirect("/")
+    else:
+        return render_template("deleted.html", transaction=unedited_transaction)
+
+@app.route("/history")
+@login_required
+def history():
+    user_id = session["user_id"]
+    user_transaction = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
+    transactions = []
+    counter = 0
+    for transaction in user_transaction:
+        counter += 1
+        amount = transaction["amount"]
+        amount = f"{amount:.2f}"
+        transactions.append(
+            {
+                "id": counter,
+                "Expense": transaction["flow"],
+                "Date": transaction["dated"],
+                "Payment": transaction["payment"],
+                "Category": transaction["category"],
+                "Amount": amount,
+                "Note": transaction["note"],
+                "Ammended": transaction["timestamp"],
+            }
+        )
+
+    return render_template("history.html", transactions=transactions)
+
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -315,3 +463,78 @@ def register():
             return redirect("/")
     else:
         return render_template("register.html")
+
+
+
+@app.route("/change", methods=["GET", "POST"])
+@login_required
+def change():
+    user_id = session["user_id"]
+    userprofile = db.execute("SELECT * FROM users WHERE id = ?", user_id)
+    if request.method == "POST":
+        # Ensure username was submitted
+        if not request.form.get("old_password"):
+            return apology("Missing Old Password", 400)
+
+        # Ensure password was submitted
+        elif not request.form.get("new_password"):
+            return apology("Missing New Password", 400)
+
+        # Ensure password and confirmation is correct
+        elif request.form.get("new_password") != request.form.get("confirmation"):
+            return apology("New Password don't match", 400)
+
+        old_password = request.form.get("old_password")
+        new_password = request.form.get("new_password")
+
+        user_password = userprofile[0]["hash"]
+        if check_password_hash(user_password, old_password) == False:
+            return apology("Old Password does not Match", 400)
+        else:
+            new_password_hashed = generate_password_hash(new_password)
+            db.execute("UPDATE users SET hash = ? WHERE id = ?", new_password_hashed, user_id)
+
+            flash("Password Changed!", "success")
+            return redirect("/")
+    else:
+        return render_template("change.html")
+
+
+@app.route("/summary", methods=["GET", "POST"])
+@login_required
+def add():
+    if request.method == "POST":
+        if not request.form.get("flow"):
+            return apology("Missing Expenditure Flow", 400)
+        elif not request.form.get("date"):
+            return apology("Missing Date", 400)
+        elif not request.form.get("amount"):
+            return apology("Missing Amount", 400)
+        elif not request.form.get("method"):
+            return apology("Missing Payment Method", 400)
+        
+        amount = request.form.get("amount")
+
+        if(isint(amount) == False and isfloat(amount) == False):
+            return apology("Invalid Amount", 400)
+        
+        if(isint(amount) == True):
+            amount = int(amount)
+        else:
+            amount = float(amount)
+
+        flow = request.form.get("flow")
+        date = request.form.get("date")
+        payment = request.form.get("method")
+        category = request.form.get("category")
+        note = request.form.get("note")
+        if flow == "expense":
+            amount = -amount
+        else:
+            amount = amount
+        amount = round(amount, 2)
+        db.execute("INSERT INTO transactions (person_id, flow, dated, payment, category, amount, note) VALUES (?, ?, ?, ?, ?, ?, ?)", session["user_id"], flow, date, payment, category, amount, note)
+        flash("Expenditure Added!", "success")
+        return redirect("/")
+    else:
+        return render_template("add.html")
