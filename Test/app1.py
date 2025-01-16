@@ -7,7 +7,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, extract_month_year, extract_dates
-from summary import email_summary
+from Test.summary import email_summary
 
 # Configure application
 app = Flask(__name__)
@@ -501,48 +501,12 @@ def change():
         return render_template("change.html")
 
 
-@app.route("/summary", methods=["GET", "POST"])
+@app.route("/email", methods=["GET", "POST"])
 @login_required
 def summary():
     if request.method == "POST":
         email = request.form.get("email")
         response = email_summary(email)
-        return response
-
-
-
-    if request.method == "POST":
-        if not request.form.get("flow"):
-            return apology("Missing Expenditure Flow", 400)
-        elif not request.form.get("date"):
-            return apology("Missing Date", 400)
-        elif not request.form.get("amount"):
-            return apology("Missing Amount", 400)
-        elif not request.form.get("method"):
-            return apology("Missing Payment Method", 400)
-        
-        amount = request.form.get("amount")
-
-        if(isint(amount) == False and isfloat(amount) == False):
-            return apology("Invalid Amount", 400)
-        
-        if(isint(amount) == True):
-            amount = int(amount)
-        else:
-            amount = float(amount)
-
-        flow = request.form.get("flow")
-        date = request.form.get("date")
-        payment = request.form.get("method")
-        category = request.form.get("category")
-        note = request.form.get("note")
-        if flow == "expense":
-            amount = -amount
-        else:
-            amount = amount
-        amount = round(amount, 2)
-        db.execute("INSERT INTO transactions (person_id, flow, dated, payment, category, amount, note) VALUES (?, ?, ?, ?, ?, ?, ?)", session["user_id"], flow, date, payment, category, amount, note)
-        flash("Expenditure Added!", "success")
-        return redirect("/")
+        return render_template("email.html", response=response)
     else:
-        return render_template("add.html")
+        return render_template("email.html")

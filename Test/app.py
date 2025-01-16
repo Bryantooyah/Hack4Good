@@ -7,6 +7,7 @@ from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, extract_month_year, extract_dates
+from summary import email_summary
 
 # Configure application
 app = Flask(__name__)
@@ -315,3 +316,15 @@ def register():
             return redirect("/")
     else:
         return render_template("register.html")
+    
+@app.route("/email", methods=["GET", "POST"])
+@login_required
+def summary():
+    if request.method == "POST":
+        email = request.form.get("email")
+        print(email)
+        response = email_summary(email)
+        print(response)
+        return render_template("email.html", response=response)
+    else:
+        return render_template("email.html", response=None)

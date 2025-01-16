@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Summary
+{% endblock %}
+
+{% block main %}
+    <form action="/email" method="post">
+        <div class="mb-3">
+            <label for="email" class="form-label">Email Thread</label>
+            <input type="text" class="form-control" id="email" name="email" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Summarise</button>
+    </form>
+    {% if response is none %}
+        <p class="text-center">No email to summarise yet.</p>
+    {% else %}
+        <h1>Email Summarisation</h1>
+        <p>Subject: {{ response.Subject }}</p>
+        <p>Sender: {{ response.Sender }}</p>
+        <p>Recipients: {{ response.Recipients }}</p>
+        <p>Date/Time: {{ response.Date_Time }}</p>
+        <p>Main Purpose: {{ response.Main_Purpose }}</p>
+        <p>Key Points Discussed: {{ response.Key_Points_Discussed }}</p>
+        <p>Action Items and Deadlines: {{ response.Action_Items_and_Deadlines }}</p>
+        <p>Attachments/Links: {{ response.Attachments_Links }}</p>
+        <p>Overall Tone: {{ response.Overall_Tone }}</p>
+        <p>Summary: {{ response.Summary }}</p>
+    
+    {% endif %}
+    
+{% endblock %}
