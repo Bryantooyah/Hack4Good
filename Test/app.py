@@ -112,6 +112,7 @@ def view():
     if request.method == "POST":
         date = request.form.get("date")
         action = request.form.get("mt")
+        db.execute("UPDATE dates SET meets = ?, timestamp = CURRENT_TIMESTAMP WHERE id = ?", date, person_id)
         return render_template("edit.html", date=date, action=action)
     else:
         return render_template("view.html")
