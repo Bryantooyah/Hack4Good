@@ -10,11 +10,20 @@
         <form action="/edit" method="post">
             <input type="time" id="appt" name="appt" min="08:00" max="18:00" required />
             <small>Office hours are 8am to 6pm</small>
+            <button hidden="yes" name="task" value=""></button>
         </form>
     {% else %}
         <h2 class="text-center fw-bold mb-2">Task:</h2>
         <form action="/edit" method="post">
             <input autocomplete="off" autofocus class="form-control mx-auto w-auto" name="task" placeholder="Add Task" type="text">
+            <button hidden="yes" name="appt" value=""></button>
         </form>
     {% endif %}
+    {% for date in dates %}
+        <tbody>
+            <td class="text-start">{{ date.id }}</td>
+            <td class="text-start">{{ date.Meetings }}</td>
+            <td class="text-end">{{ date.Tasks }}</td>
+        </tbody>
+    {% endfor %}
 {% endblock %}

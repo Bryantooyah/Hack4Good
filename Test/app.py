@@ -119,19 +119,19 @@ def view():
 @app.route("/edit", methods=["GET", "POST"])
 @login_required
 def edit():
-    user_id = session["user_id"]
+    date1 = session["date"]
     if request.method == "POST":
-        user_transaction = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
+        date_mts = db.execute("SELECT * FROM transactions WHERE person_id = ?", date1)
         dates = []
         counter = 0
-        for date in user_transaction:
+        for date in date_mts:
             counter += 1
             dates.append(
                 {
                     "id": counter,
                     "Meetings": date["meets"],
                     "Tasks": date["tasks"],
-                    "Hidden_id": date["id"],
+                    "Hidden_id": date["date"],
                 }
             )
         meets = request.form.get("appt")
