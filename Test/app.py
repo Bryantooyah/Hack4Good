@@ -108,7 +108,7 @@ def index():
     
 @app.route("/view", methods=["GET", "POST"])
 @login_required
-def add():
+def view():
     if request.method == "POST":
         date = request.form.get("date")
         action = request.form.get("mt")
@@ -134,14 +134,13 @@ def edit():
                     "Hidden_id": date["id"],
                 }
             )
-
-        meets = request.form.get("meets")
-        tasks = request.form.get("tasks")
-        user_info = [meets, tasks]
+        meets = request.form.get("appt")
+        tasks = request.form.get("task")
+        date_info = [meets, tasks]
         user_category = ["Meetings", "Tasks"]
-        user_search = dict(zip(user_category, user_info))
-        if user_info == ['', '']:
-            return render_template("edit.html", dates=dates)
+        user_search = dict(zip(user_category, date_info))
+        if date_info == ['', '']:
+            return render_template("view.html")
         else:
             user_search_transaction = []
             for date in dates:
