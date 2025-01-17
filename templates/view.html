@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    View Meetings/Tasks
+{% endblock %}
+
+{% block main %}
+
+    <h2 class="text-center fw-bold mb-2">Scheduled Meetings and Tasks</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="text-start">S/N</th>
+                <th class="text-start">Scheduled Meetings</th>
+                <th class="text-start">Tasks</th>
+            </tr>
+    </thead>
+    {% for date in dates %}
+        <tbody>
+            <td class="text-start">{{ date.id }}</td>
+            <td class="text-start">{{ date.Meetings }}</td>
+            <td class="text-start">{{ date.Tasks }}</td>
+        </tbody>
+    {% endfor %}
+    </table>
+    <form action="/view" method="post">
+        <button class="btn btn-primary" type="submit">Add Meeting/Task</button>
+    </form>
+
+{% endblock %}

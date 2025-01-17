@@ -3,23 +3,21 @@ import os
 from dotenv import load_dotenv
 
 import json
-import dataclasses
-import typing_extensions as typing
-from markdown import markdown
-
-
 
 def set_model(model_name,system_prompt):
   load_dotenv()
   api_key = os.getenv('api_key')
   genai.configure(api_key=api_key)
   return_model = genai.GenerativeModel( model_name=model_name,
+                                       generation_config={"response_mime_type": "application/json"},
                                        system_instruction=system_prompt)
   return return_model
 
 def email_summary(mail):
     load_dotenv()
     api_key = os.getenv('api_key')
+    if not api_key:
+      raise ValueError("API key not found. Please ensure it's set in the .env file.")
     genai.configure(api_key=api_key)
     system_instruction = """ From the email please extract out the following using this JSON schema:
 
@@ -40,8 +38,16 @@ def email_summary(mail):
     flash_model = set_model('models/gemini-1.5-flash-002',system_instruction)
 
     flash_model_response = flash_model.generate_content(mail)
-    response = json.loads(flash_model_response.text)
-    return response
+    response = flash_model_response.text.strip("json").strip()
+    print(response)
+    try:
+        # Attempt to parse the response text as JSON
+        response = json.loads(flash_model_response.text)
+        return response
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to decode JSON response: {e}")
+    except AttributeError:
+        raise ValueError("The API response does not contain valid text data.")
 
 
 mail = """
@@ -106,25 +112,3 @@ Testing is on track, and I’ll confirm by January 20 as planned. Let me know if
 Thanks,
 Alex
 """
-
-# system_instruction = """ From the email please extract out the following using this JSON schema:
-
-# Subject = {"Subject" : str}
-# Sender = {"Sender" : str}
-# Recipients: {"Recipients": str}
-# Date_Time: {"Date/time": datetime}
-# Main_Purpose: {"Main Purpose": str}
-# Key_Points_Discussed: {"Key Points": str}
-# Action_Items_and_Deadlines: {"Deadlines": str}
-# Attachments_Links: {"Attachment": str}
-# Overall_Tone: {"Tone": str}
-# Summary: {"Summary": str}
-# Return: list[Subject], list[Sender], list[Recipients], list[Date_Time], list[Main_Purpose], list[Key_Points_Discussed], list[Action_Items_and_Deadlines], list[Attachments_Links], list[Overall_Tone], list[Summary]
-
-# """
-
-# flash_model = set_model('models/gemini-1.5-flash-002',system_instruction)
-
-# flash_model_response = flash_model.generate_content(mail)
-# response = markdown(flash_model_response.text)
-# print(response)

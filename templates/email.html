@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Summary
+{% endblock %}
+
+{% block main %}
+    <form action="/email" method="post">
+        <div class="mb-3">
+            <label for="email" class="form-label">Email Thread</label>
+            <textarea class="form-control" id="email" name="email" rows="10" required></textarea>
+            
+        </div>
+        <button type="submit" class="btn btn-primary">Summarise</button>
+    </form>
+    {% if response is none %}
+        <p class="text-center">No email to summarise yet.</p>
+    {% else %}
+        <h1>Email Summarisation</h1>
+        <p>Subject: {{ Subject }}</p>
+        <p>Sender: {{ Sender }}</p>
+        <p>Recipients: {{ Recipients }}</p>
+        <p>Date/Time: {{ Date_Time }}</p>
+        <p>Main Purpose: {{ Main_Purpose }}</p>
+        <p>Key Points Discussed: {{ Key_Points }}</p>
+        <p>Action Items and Deadlines: {{ Deadlines }}</p>
+        <p>Attachments/Links: {{ Attachments_Links }}</p>
+        <p>Overall Tone: {{ Overall_Tone }}</p>
+        <p>Summary: {{ Summary }}</p>
+
+        
+    {% endif %}
+    
+{% endblock %}
+
+<p>Subject: {{ Subject }}</p>
+<p>Sender: {{ Sender }}</p>
+<p>Recipients: {{ Recipients }}</p>
+<p>Date/Time: {{ Date_Time }}</p>
+<p>Main Purpose: {{ Main_Purpose }}</p>
+<p>Key Points Discussed: {{ Key_Points }}</p>
+<p>Action Items and Deadlines: {{ Deadlines }}</p>
+<p>Attachments/Links: {{ Attachments_Links }}</p>
+<p>Overall Tone: {{ Overall_Tone }}</p>
+<p>Summary: {{ Summary }}</p>
+{% for subject in Subject %}
+<p>Subject: {{ subject.Subject }}</p>
+{% endfor %}
+{% for recipient in Recipient %}
+<p>Recipient: {{ recipient.Recipient }}</p>
+{% endfor %}
+{% for sender in Sender %}
+<p>Sender: {{ sender.Sender }}</p>
+{% endfor %}
+{% for date_time in Date_Time %}
+<p>Date/Time: {{ date_time.Date/time }}</p>
+{% endfor %}
+{% for main_purpose in Main_Purpose %}
+<p>Main Purpose: {{ main_purpose.Main_Purpose }}</p>
+{% endfor %}
+{% for key_points in Key_Points %}
+<p>Key Points Discussed: {{ key_points.Key_Points }}</p>
+{% endfor %}
+{% for deadlines in Deadlines %}
+<p>Action Items and Deadlines: {{ deadlines.Deadlines }}</p>
+{% endfor %}
+{% for attachments_links in Attachments_Links %}
+<p>Attachments/Links: {{ attachments_links.Attachments }}</p>
+{% endfor %}
+{% for overall_tone in Overall_Tone %}
+<p>Overall Tone: {{ overall_tone.Overall_Tone }}</p>
+{% endfor %}
+{% for summary in Summary %}
+<p>Summary: {{ summary.Summary }}</p>
+{% endfor %}
