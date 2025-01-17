@@ -54,13 +54,9 @@ def index():
     if len(options) == 0:
         return render_template("index.html", options=None, chosen_option=None)
     chosen_option = options[0]
-    chosen_dates = extract_dates(chosen_option)
-    counter = 0
     if request.method == "POST":
         chosen_option = request.form.get("selected_month")
         print(chosen_option)
-        chosen_dates = extract_dates(chosen_option)
-        counter = 0
     return render_template("login.html", options=options, chosen_option=chosen_option)
     
 @app.route("/main", methods=["GET", "POST"])
@@ -154,8 +150,6 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
-
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
