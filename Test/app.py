@@ -5,9 +5,11 @@ from cs50 import SQL
 from flask import Flask, flash, redirect, render_template, request, session
 from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
+from json import loads
 
 from helpers import apology, login_required, extract_month_year, extract_dates
 from summary import email_summary
+
 
 # Configure application
 app = Flask(__name__)
@@ -46,184 +48,64 @@ def after_request(response):
 @login_required
 def index():
     user_id = session["user_id"]
-    user_transaction = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
-    transactions = []
+    user_date = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
     dates = []
-    for transaction in user_transaction:
-        if transaction["dated"] not in dates:
-            dates.append(transaction["dated"])
-
     options = extract_month_year(dates)
     if len(options) == 0:
-
-        return render_template("index.html", transactions=None, options=None, chosen_option=None, earnings=0, expenses=0)
+        return render_template("index.html", options=None, chosen_option=None)
     chosen_option = options[0]
     chosen_dates = extract_dates(chosen_option)
     counter = 0
-    for transaction in user_transaction:
-        if transaction["dated"] in chosen_dates:
-            transactions.append(
-                {
-                    "Expense": transaction["flow"],
-                    "Date": transaction["dated"],
-                    "Payment": transaction["payment"],
-                    "Category": transaction["category"],
-                    "Amount": transaction["amount"],
-                    "Note": transaction["note"],
-                }
-            )
-    for transaction in transactions:
-        counter += 1
-        transaction["id"] = counter
     if request.method == "POST":
         chosen_option = request.form.get("selected_month")
         print(chosen_option)
         chosen_dates = extract_dates(chosen_option)
-        transactions = []
         counter = 0
-        for transaction in user_transaction:
-            if transaction["dated"] in chosen_dates:
+    return render_template("login.html", options=options, chosen_option=chosen_option)
+    
+@app.route("/main", methods=["GET", "POST"])
+@login_required
+def main():
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "add":
+            render_template("add.html")
+        elif action == "view":
+            user_id = session["user_id"]
+            user_date = db.execute("SELECT * FROM dates WHERE person_id = ?", user_id)
+            dates = []
+            counter = 0
+            for date in user_date:
                 counter += 1
-                transactions.append(
+                dates.append(
                     {
                         "id": counter,
-                        "Expense": transaction["flow"],
-                        "Date": transaction["dated"],
-                        "Payment": transaction["payment"],
-                        "Category": transaction["category"],
-                        "Amount": transaction["amount"],
-                        "Note": transaction["note"],
+                        "Meetings": date["meets"],
+                        "Tasks": date["tasks"],
                     }
                 )
-    expenses = 0
-    earnings = 0
-    for transaction in transactions:
-        if transaction["Expense"] == "expense":
-            expenses += -(transaction["Amount"])
-        else:
-            earnings += transaction["Amount"]
-    expenses = f"{expenses:.2f}"
-    earnings = f"{earnings:.2f}"
-    return render_template("index.html", transactions=transactions, options=options, chosen_option=chosen_option, earnings=earnings, expenses=expenses)
-    
+            render_template("view.html", dates=dates)
+
 @app.route("/view", methods=["GET", "POST"])
 @login_required
 def view():
     if request.method == "POST":
-        date = request.form.get("date")
-        action = request.form.get("mt")
-        db.execute("UPDATE dates SET meets = ?, timestamp = CURRENT_TIMESTAMP WHERE id = ?", date, person_id)
-        return render_template("edit.html", date=date, action=action)
-    else:
-        return render_template("view.html")
+        return render_template("add.html")
     
-@app.route("/edit", methods=["GET", "POST"])
+@app.route("/add", methods=["GET", "POST"])
 @login_required
 def edit():
-    date1 = session["date"]
+    user_id = session["user_id"]
     if request.method == "POST":
-        date_mts = db.execute("SELECT * FROM transactions WHERE person_id = ?", date1)
-        dates = []
-        counter = 0
-        for date in date_mts:
-            counter += 1
-            dates.append(
-                {
-                    "id": counter,
-                    "Meetings": date["meets"],
-                    "Tasks": date["tasks"],
-                    "Hidden_id": date["date"],
-                }
-            )
+        date = request.form.get("date")
         meets = request.form.get("appt")
         tasks = request.form.get("task")
-        date_info = [meets, tasks]
-        user_category = ["Meetings", "Tasks"]
-        user_search = dict(zip(user_category, date_info))
-        if date_info == ['', '']:
-            return render_template("view.html")
-        else:
-            user_search_transaction = []
-            for date in dates:
-                placeholder = []
-                print(date)
-                for categories, info in user_search.items():
-                    print(categories, info)
-                    if info == '' or info == None:
-                        continue
-                    else:
-                        print(date[categories], info)
-                        if date[categories] == info:
-                            print("yes")
-                            placeholder.append(date)
-                        else:
-                            placeholder = []
-                            break
-                if placeholder != []:
-                    user_search_transaction.append(placeholder[0])
-            return render_template("view.html", dates=user_search_transaction)
+        db.execute("INSERT INTO dates (person_id, date, meets, tasks VALUES (?, ?, ?, ?)", user_id, date, meets, tasks)
+        flash("Meeting/Task Added!", "success")
+        return render_template("main.html")
     else:
-        return render_template("edit.html", dates=None)
+        return render_template("add.html")
     
-@app.route('/edited/<int:transaction_id>', methods=['GET', 'POST'])
-@login_required
-def edit_transaction(transaction_id):
-    user_id = session["user_id"]
-            
-    if request.method == "POST":
-        if not request.form.get("flow"):
-            return apology("Missing Expenditure Flow", 400)
-        elif not request.form.get("date"):
-            return apology("Missing Date", 400)
-        elif not request.form.get("amount"):
-            return apology("Missing Amount", 400)
-        elif not request.form.get("method"):
-            return apology("Missing Payment Method", 400)
-        
-        amount = request.form.get("amount")
-
-        if(isint(amount) == False and isfloat(amount) == False):
-            return apology("Invalid Amount", 400)
-        
-        if(isint(amount) == True):
-            amount = int(amount)
-        else:
-            amount = float(amount)
-
-        flow = request.form.get("flow")
-        date = request.form.get("date")
-        payment = request.form.get("method")
-        category = request.form.get("category")
-        note = request.form.get("note")
-        if flow == "expense":
-            amount = -amount
-        else:
-            amount = amount
-        amount = round(amount, 2)
-        db.execute("UPDATE transactions SET flow = ?, dated = ?, payment = ?, category = ?, amount = ?, note = ?, timestamp = CURRENT_TIMESTAMP WHERE id = ?", flow, date, payment, category, amount, note, transaction_id)
-        flash("Expenditure Updated!", "success")
-        return redirect("/")
-    else:
-        user_transaction = db.execute("SELECT * FROM transactions WHERE person_id = ?", user_id)
-        for transaction in user_transaction:
-            if transaction["id"] == transaction_id:
-                if transaction["flow"] == "expense":
-                    transaction["amount"] = -transaction["amount"]
-                unedited_transaction = {
-                        "id": 1,
-                        "Expense": transaction["flow"],
-                        "Date": transaction["dated"],
-                        "Payment": transaction["payment"],
-                        "Category": transaction["category"],
-                        "Amount": transaction["amount"],
-                        "Note": transaction["note"],
-                        "Ammended": transaction["timestamp"],
-                        "Hidden_id": transaction["id"],
-                }
-                break
-        
-        return render_template("edited.html", transaction=unedited_transaction)
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -256,7 +138,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
-        return redirect("/")
+        return render_template("main.html")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -324,7 +206,19 @@ def summary():
         email = request.form.get("email")
         print(email)
         response = email_summary(email)
-        print(response)
-        return render_template("email.html", response=response)
+        print(response, type(response))
+        Subject = response["Subject"]
+        Sender = response["Sender"]
+        Recipients = response["Recipients"]
+        Date_Time = response["Date_time"]
+        Main_Purpose = response["Main_Purpose"]
+        Key_Points = response["Key_Points_Discussed"]
+        Deadlines = response["Action_Items_and_Deadlines"]
+        Attachments_Links = response["Attachments_Links"]
+        Overall_Tone = response["Overall_Tone"]
+        Summary = response["Summary"]
+        
+        return render_template("email.html", response=True, Subject=Subject, Sender=Sender, Recipients=Recipients, Date_Time=Date_Time, Main_Purpose=Main_Purpose,
+                               Key_Points=Key_Points, Deadlines=Deadlines, Attachments_Links=Attachments_Links, Overall_Tone=Overall_Tone, Summary=Summary)
     else:
         return render_template("email.html", response=None)

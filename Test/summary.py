@@ -40,7 +40,7 @@ def email_summary(mail):
     flash_model = set_model('models/gemini-1.5-flash-002',system_instruction)
 
     flash_model_response = flash_model.generate_content(mail)
-    response = markdown(flash_model_response.text)
+    response = json.loads(flash_model_response.text)
     return response
 
 
